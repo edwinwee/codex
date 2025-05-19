@@ -742,6 +742,10 @@ export async function getApiKey(
   if (!forceLogin && process.env["OPENAI_API_KEY"]) {
     return process.env["OPENAI_API_KEY"]!;
   }
+  if (!forceLogin && process.env["CHATGPT_IOS_API_KEY"]) {
+    process.env["OPENAI_API_KEY"] = process.env["CHATGPT_IOS_API_KEY"]!;
+    return process.env["OPENAI_API_KEY"]!;
+  }
   const choice = await promptUserForChoice();
   if (choice.type === "apikey") {
     process.env["OPENAI_API_KEY"] = choice.key;

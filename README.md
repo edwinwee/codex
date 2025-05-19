@@ -81,6 +81,8 @@ Next, set your OpenAI API key as an environment variable:
 
 ```shell
 export OPENAI_API_KEY="your-api-key-here"
+# Or use your ChatGPT iOS token
+export CHATGPT_IOS_API_KEY="your-ios-token-here"
 ```
 
 > **Note:** This command sets the key only for your current terminal session. You can add the `export` line to your shell's configuration file (e.g., `~/.zshrc`) but we recommend setting for the session. **Tip:** You can also place your API key into a `.env` file at the root of your project:
@@ -139,9 +141,16 @@ codex "explain this codebase to me"
 codex --approval-mode full-auto "create the fanciest todo-list app"
 ```
 
+
 That's it - Codex will scaffold a file, run it inside a sandbox, install any
 missing dependencies, and show you the live result. Approve the changes and
 they'll be committed to your working directory.
+
+## ChatGPT iOS app
+
+If you use the ChatGPT iOS app, you can export your API token and set it via
+`CHATGPT_IOS_API_KEY`. Codex CLI will automatically fall back to this value when
+`OPENAI_API_KEY` is not defined.
 
 ---
 
@@ -466,6 +475,8 @@ For each AI provider, you need to set the corresponding API key in your environm
 ```bash
 # OpenAI
 export OPENAI_API_KEY="your-api-key-here"
+# ChatGPT iOS
+export CHATGPT_IOS_API_KEY="your-ios-token-here"
 
 # Azure OpenAI
 export AZURE_OPENAI_API_KEY="your-azure-api-key-here"
