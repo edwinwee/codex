@@ -211,6 +211,12 @@ The hardening mechanism Codex uses depends on your OS:
 
 > Never run `sudo npm install -g`; fix npm permissions instead.
 
+### iOS app (experimental)
+
+An example React Native application lives in [ios-app](./ios-app).
+Follow the [instructions](./ios-app/README.md) there to build and run Codex on iOS.
+
+
 ---
 
 ## CLI reference
