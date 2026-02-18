@@ -11,15 +11,27 @@ export function renderLatexInMarkdown(markdown: string): string {
     protectCodeSegments(markdown);
   let rendered = markdownWithPlaceholders;
 
-  rendered = rendered.replace(/\$\$([\s\S]+?)\$\$/g, (_match, expression) => {
-    const renderedExpression = renderLatexExpression(expression);
-    return renderedExpression ? `\n\n${renderedExpression}\n\n` : "";
-  });
+  rendered = rendered.replace(
+    /\$\$([\s\S]+?)\$\$/g,
+    (match, expression, offset, source) => {
+      const renderedExpression = renderLatexExpression(expression);
+      if (!renderedExpression) {
+        return "";
+      }
+      return wrapDisplayMath(renderedExpression, offset, match.length, source);
+    },
+  );
 
-  rendered = rendered.replace(/\\\[([\s\S]+?)\\\]/g, (_match, expression) => {
-    const renderedExpression = renderLatexExpression(expression);
-    return renderedExpression ? `\n\n${renderedExpression}\n\n` : "";
-  });
+  rendered = rendered.replace(
+    /\\\[([\s\S]+?)\\\]/g,
+    (match, expression, offset, source) => {
+      const renderedExpression = renderLatexExpression(expression);
+      if (!renderedExpression) {
+        return "";
+      }
+      return wrapDisplayMath(renderedExpression, offset, match.length, source);
+    },
+  );
 
   rendered = rendered.replace(
     /\\\(((?:\\.|[^\\\n])+?)\\\)/g,
@@ -29,6 +41,26 @@ export function renderLatexInMarkdown(markdown: string): string {
   rendered = replaceInlineDollarMath(rendered);
 
   return restoreCodeSegments(rendered, protectedSegments);
+}
+
+function wrapDisplayMath(
+  expression: string,
+  offset: number,
+  matchLength: number,
+  source: string,
+): string {
+  const before = offset > 0 ? (source[offset - 1] ?? "") : "";
+  const afterIndex = offset + matchLength;
+  const after = afterIndex < source.length ? (source[afterIndex] ?? "") : "";
+
+  const prefix = isLineBreak(before) ? "\n" : before ? "\n\n" : "";
+  const suffix = isLineBreak(after) ? "\n" : after ? "\n\n" : "";
+
+  return `${prefix}${expression}${suffix}`;
+}
+
+function isLineBreak(character: string): boolean {
+  return character === "\n" || character === "\r";
 }
 
 const PROTECTED_SEGMENT_PREFIX = "__CODEX_LATEX_PROTECTED_SEGMENT_";
@@ -237,6 +269,9 @@ function parseArgument(source: string, start: number): ParseResult {
     (source[index] === "^" || source[index] === "_")
   ) {
     const decorationType = source[index];
+    if (decorationType !== "^" && decorationType !== "_") {
+      break;
+    }
     const decorationArgument = parseArgument(source, index + 1);
     atom = {
       rendered:
@@ -260,6 +295,9 @@ function parseAtom(source: string, start: number): ParseResult {
   }
 
   const character = source[start];
+  if (!character) {
+    return { rendered: "", next: start + 1 };
+  }
   if (character === "{") {
     return parseSequence(source, start + 1, "}");
   }
@@ -348,10 +386,7 @@ function parseCommandAt(source: string, start: number): ParseResult {
   }
 
   return {
-    rendered:
-      LATEX_COMMAND_TO_TEXT[command.name] !== undefined
-        ? LATEX_COMMAND_TO_TEXT[command.name]
-        : `\\${command.name}`,
+    rendered: LATEX_COMMAND_TO_TEXT[command.name] ?? `\\${command.name}`,
     next: cursor,
   };
 }
@@ -380,7 +415,11 @@ function readCommand(source: string, start: number): CommandReadResult | null {
 
   if (/[A-Za-z]/.test(first)) {
     let cursor = start + 2;
-    while (cursor < source.length && /[A-Za-z]/.test(source[cursor])) {
+    while (cursor < source.length) {
+      const cursorChar = source[cursor];
+      if (!cursorChar || !/[A-Za-z]/.test(cursorChar)) {
+        break;
+      }
       cursor += 1;
     }
     return {
@@ -430,7 +469,11 @@ function parseRawGroup(source: string, start: number): ParseResult {
 
 function skipWhitespace(source: string, start: number): number {
   let index = start;
-  while (index < source.length && /\s/.test(source[index])) {
+  while (index < source.length) {
+    const character = source[index];
+    if (!character || !/\s/.test(character)) {
+      break;
+    }
     index += 1;
   }
   return index;
