@@ -29,6 +29,22 @@ it("renders basic markdown", () => {
   expect(frame).toContain("italic");
 });
 
+it("renders inline LaTeX math delimiters", () => {
+  const { lastFrameStripped } = renderTui(
+    <Markdown fileOpener={undefined}>Equation: $x_1 + y^2$</Markdown>,
+  );
+
+  expect(lastFrameStripped()).toContain("Equation: x₁ + y²");
+});
+
+it("keeps currency text unchanged", () => {
+  const { lastFrameStripped } = renderTui(
+    <Markdown fileOpener={undefined}>It costs $5 and $10.</Markdown>,
+  );
+
+  expect(lastFrameStripped()).toContain("It costs $5 and $10.");
+});
+
 describe("ensure <Markdown> produces content with correct ANSI escape codes", () => {
   let chalkOriginalLevel: ColorSupportLevel = 0;
 

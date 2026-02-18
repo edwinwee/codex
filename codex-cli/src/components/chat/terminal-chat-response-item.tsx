@@ -12,6 +12,7 @@ import type { FileOpenerScheme } from "src/utils/config";
 
 import { useTerminalSize } from "../../hooks/use-terminal-size";
 import { collapseXmlBlocks } from "../../utils/file-tag-utils";
+import { renderLatexInMarkdown } from "../../utils/latex-rendering";
 import { parseToolCall, parseToolCallOutput } from "../../utils/parsers";
 import chalk, { type ForegroundColorName } from "chalk";
 import { Box, Text } from "ink";
@@ -285,13 +286,14 @@ export function Markdown({
 
   const rendered = React.useMemo(() => {
     const linkifiedMarkdown = rewriteFileCitations(children, fileOpener, cwd);
+    const markdownWithLatex = renderLatexInMarkdown(linkifiedMarkdown);
 
     // Configure marked for this specific render
     setOptions({
       // @ts-expect-error missing parser, space props
       renderer: new TerminalRenderer({ ...options, width: size.columns }),
     });
-    const parsed = parse(linkifiedMarkdown, { async: false }).trim();
+    const parsed = parse(markdownWithLatex, { async: false }).trim();
 
     // Remove the truncation logic
     return parsed;
